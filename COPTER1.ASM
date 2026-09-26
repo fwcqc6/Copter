@@ -3,7 +3,7 @@ org 100h
 assume ds:code,cs:code,ss:code
 start:jmp init
 
-s1 db '___.___',0,' __.__ ',0,'  _._  ',0,' __.__ ',0 
+s1 db '___.___',0,' __.__ ',0,'  _._  ',0,' __.__ ',0
 maxdel equ 32
 del equ 8
 state dw 0
@@ -15,24 +15,25 @@ old1c dd ?,?
 old09 dd ?,?
 flag db 0
 
-printp proc
-  push di cx ax
-  mov ax,0b800h
+printp proc ; ds:si - адрес выводимой ASCIIZ-строки, dl - цвет символа
+            ; координаты: ch - строка, cl - столбец
+  push di cx ax ; сохраним регистры, которые портим
+  mov ax,0b800h ; настроим ES на видеобуфер
   mov es,ax
-  cld
-  mov al,160
+  cld           ; сбросим флаг направления
+  mov al,160    ; рассчитаем смещение начала вывода строки в видеобуфере
   dec ch
   dec cl
-  mul ch
+  mul ch        ; ax:=al*ch
   xor ch,ch
-  shl cl,1
-  add ax,cx
-  mov di,ax
-  mov ah,dl
-next:lodsb
-  or al,al
-  jz quit
-  stosw
+  shl cl,1      ; cx:=cl*2
+  add ax,cx     ; получаем смещение первого выводимого символа относительно
+  mov di,ax     ; начала видеопамяти
+  mov ah,dl     ; цвет выводимых символов
+next:lodsb ; Загружаем очередной символ
+  or al,al ; строка закончилась?
+  jz quit  ; если да, то на выход
+  stosw    ; записать символ и цвет
   jmp short next
 quit:pop ax cx di
   ret
@@ -42,25 +43,13 @@ keyhandler proc far
     push ax cx dx ds si es cs
     pop ds
     ;
-    mov dl,0
-    mov ch,y
-    mov cl,x
-    add cl,3
-    mov si,offset s1
-    call printp
-    mov ch,y
-    inc ch
-    mov cl,x
-    mov si,offset s2
-    call printp
-    ;
-    in al,60h
-    cmp al,1
+    in al,60h ; читаем скан-код нажатой клавиши в регистр al
+    cmp al,1  ; проверка на esc
     jne k1
     mov flag,1
     jmp short ex
-k1: cmp al,72
-    jne k2
+k1: cmp al,72  ; проверка на нажатие стрелок
+    jne k2     ; смещение относительно нажатой стрелки и контроль границ
     cmp y,0
     je ex
     dec y
@@ -91,7 +80,7 @@ ex: and al,01111111b
     out 61h,al
     mov al,ah
     out 61h,al
-    mov al,20h
+    mov al,20h ; Завершить прерывание
     out 20h,al
     pop es ds si dx cx ax
     iRet
@@ -101,11 +90,11 @@ Timer proc far
     push ds si ax bx dx cs
     pop ds
     ;
-    add state,del
+    add state,del ; Изменить состояние винта
     cmp state,maxdel
     jbe t1
     mov state,0
-t1: mov dl,5
+t1: mov dl,5    ; Нарисовтаь винт
     mov ch,y
     mov cl,x
     add cl,3
@@ -113,7 +102,7 @@ t1: mov dl,5
     add si,state
     call printp
     ;
-    mov dl,5
+    mov dl,5    ; Нарисовать вертолет
     mov ch,y
     inc ch
     mov cl,x
@@ -124,7 +113,7 @@ t1: mov dl,5
     iRet
 timer endp
 
-init:  mov ax,351Ch
+init:  mov ax,351Ch ; Установка обработчиков таймера (1с) и 9-го прерывания
        int 21h
        mov word ptr ds:old1c,bx
        mov word ptr ds:[old1c+2],es
@@ -143,10 +132,10 @@ init:  mov ax,351Ch
        mov ax,2509h
        int 21h
        ;
-mc:    cmp flag,1
+mc:    cmp flag,1 ; цикл ожидания заершения программы (по клавише Esc)
        jne mc
        ;
-       mov ax,cs
+       mov ax,cs ; Восстановление старых обработчиков 1c и 9
        mov ds,ax
        mov ax,251ch
        lds dx,ds:old1c

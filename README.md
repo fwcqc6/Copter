@@ -35,4 +35,4 @@
 
 Открыть исходник можно с помощью клавиши F4. Запуск самой программы происходит по команде copter.exe. Компиляция исходника и создание исполняемого файла осуществляется командами tasm copter.asm, tlink copter.obj
 
-Ссылка на DosBox 0.74: https://disk.yandex.ru/d/sDHevUs0fpWxRw
+Программу можно запустить в эмуляторе DOS DosBox 0.74. Ссылка на скачивание: https://disk.yandex.ru/d/sDHevUs0fpWxRw
