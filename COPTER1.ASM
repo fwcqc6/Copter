@@ -43,6 +43,18 @@ keyhandler proc far
     push ax cx dx ds si es cs
     pop ds
     ;
+    mov dl,0  ; Закрасить вертолет и винт
+    mov ch,y
+    mov cl,x
+    add cl,3
+    mov si,offset s1
+    call printp
+    mov ch,y
+    inc ch
+    mov cl,x
+    mov si,offset s2
+    call printp
+    ;
     in al,60h ; читаем скан-код нажатой клавиши в регистр al
     cmp al,1  ; проверка на esc
     jne k1
